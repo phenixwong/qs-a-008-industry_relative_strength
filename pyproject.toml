@@ -3,7 +3,7 @@ name = "qs-a-008-industry-relative-strength"
 version = "0.1.0"
 description = "行业相对强弱观测与可持续更新报告"
 requires-python = ">=3.11"
-dependencies = ["pandas>=2.2", "numpy>=1.26", "plotly>=5.24", "tushare>=1.4"]
+dependencies = ["pandas>=2.2", "numpy>=1.26", "plotly>=5.24", "tushare>=1.4", "six>=1.16"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.8"]
@@ -11,4 +11,3 @@ dev = ["pytest>=8.0", "ruff>=0.8"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-
