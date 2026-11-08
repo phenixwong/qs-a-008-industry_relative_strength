@@ -3,6 +3,12 @@ import pandas as pd
 from qs_a008.data import normalize_index_daily
 
 
+def test_tushare_imports_with_declared_project_dependencies():
+    import tushare as ts
+
+    assert callable(ts.pro_api)
+
+
 def test_normalize_index_daily_sorts_and_keeps_required_fields():
     raw = pd.DataFrame(
         {
@@ -15,4 +21,3 @@ def test_normalize_index_daily_sorts_and_keeps_required_fields():
     assert result["trade_date"].tolist() == [pd.Timestamp("2026-10-29"), pd.Timestamp("2026-10-30")]
     assert result["name"].tolist() == ["沪深300", "沪深300"]
     assert result["close"].tolist() == [4550.0, 4600.0]
-
