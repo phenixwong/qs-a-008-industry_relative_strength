@@ -1,0 +1,82 @@
+name: Build and publish daily RS report
+
+on:
+  schedule:
+    # 22:00 China Standard Time (UTC+8), Monday to Friday.
+    - cron: "0 14 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install project and test dependencies
+        run: python -m pip install -e '.[dev]'
+
+      - name: Run tests
+        run: python -m pytest -q -p no:cacheprovider
+
+      - name: Generate report
+        env:
+          TUSHARE_TOKEN: ${{ secrets.TUSHARE_TOKEN }}
+        run: python scripts/build_first_report.py
+
+      - name: Validate complete report data and prepare site
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          import pandas as pd
+
+          from qs_a008.universe import INDUSTRIES, MARKET_INDICES
+
+          report_dir = Path("reports/generated")
+          reports = sorted(report_dir.glob("rs_report_*.html"))
+          if not reports:
+              raise SystemExit("No HTML report was generated")
+
+          metrics = pd.read_csv(report_dir / "latest_metrics.csv")
+          expected = len(INDUSTRIES) + len(MARKET_INDICES)
+          if len(metrics) != expected:
+              raise SystemExit(
+                  f"Incomplete report data: expected {expected} rows, got {len(metrics)}"
+              )
+
+          site = Path("_site")
+          site.mkdir(exist_ok=True)
+          site.joinpath("index.html").write_bytes(reports[-1].read_bytes())
+          site.joinpath(reports[-1].name).write_bytes(reports[-1].read_bytes())
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
