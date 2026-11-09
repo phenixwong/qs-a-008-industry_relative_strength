@@ -2,8 +2,8 @@ name: Build and publish daily RS report
 
 on:
   schedule:
-    # 22:00 China Standard Time (UTC+8), Monday to Friday.
-    - cron: "0 14 * * 1-5"
+    # 22:11 China Standard Time (UTC+8), Monday to Friday.
+    - cron: "11 14 * * 1-5"
   workflow_dispatch:
 
 permissions:
